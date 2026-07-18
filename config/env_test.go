@@ -816,7 +816,7 @@ func TestMapEnvToStruct(t *testing.T) {
 					packageName, e, tc.errRegex,
 				)
 			}
-			if tc.errRegex != "^$" {
+			if err != nil {
 				return
 			}
 
