@@ -1,3 +1,7 @@
+import type { DragEndEvent, SensorOptions } from '@dnd-kit/core';
+import type { SensorDescriptor } from '@dnd-kit/core/dist/sensors/types';
+import type { VisibilityState } from '@tanstack/react-table';
+import { type FC, useCallback, useEffect } from 'react';
 import { useToolbar } from '@/components/approvals/toolbar/toolbar-context';
 import { DataTable } from '@/components/ui/data-table';
 import {
@@ -10,10 +14,6 @@ import {
 } from '@/pages/approvals/layouts/table/column-visibility';
 import { columns } from '@/pages/approvals/layouts/table/columns';
 import type { ServiceSummary } from '@/utils/api/types/config/summary';
-import type { DragEndEvent, SensorOptions } from '@dnd-kit/core';
-import type { SensorDescriptor } from '@dnd-kit/core/dist/sensors/types';
-import type { VisibilityState } from '@tanstack/react-table';
-import { type FC, useCallback, useEffect } from 'react';
 
 type TableLayoutProps = {
 	/* The list of service summaries for the table. */
