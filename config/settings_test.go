@@ -30,6 +30,289 @@ import (
 	"github.com/release-argus/Argus/util/errfmt"
 )
 
+func TestSettings_MapEnvToStruct(t *testing.T) {
+	// Unset ARGUS_LOG_LEVEL.
+	argusLogLevelEnvKey := "ARGUS_LOG_LEVEL"
+	argusLogLevel := os.Getenv(argusLogLevelEnvKey)
+	os.Setenv(argusLogLevelEnvKey, "")
+	t.Cleanup(func() {
+		os.Setenv(argusLogLevelEnvKey, argusLogLevel)
+	})
+
+	// GIVEN: vars set for Settings vars.
+	tests := []struct {
+		name                  string
+		env                   map[string]string
+		want                  *Settings
+		stdoutRegex, errRegex string
+		ok                    bool
+	}{
+		{
+			name: "empty vars ignored",
+			env: map[string]string{
+				"ARGUS_LOG_LEVEL": "",
+			},
+			want: &Settings{},
+			ok:   true,
+		},
+		{
+			name: "data.readonly",
+			env: map[string]string{
+				"ARGUS_DATA_READONLY": "true",
+			},
+			want: &Settings{
+				SettingsBase: SettingsBase{
+					Data: DataSettings{
+						Readonly: new(true),
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			name: "auth.session.idle_timeout",
+			env: map[string]string{
+				"ARGUS_AUTH_SESSION_IDLE_TIMEOUT": "15m",
+			},
+			want: &Settings{
+				SettingsBase: SettingsBase{
+					Auth: AuthSettings{
+						Session: AuthSessionSettings{
+							IdleTimeout: "15m",
+						},
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			name: "auth.session.lifetime",
+			env: map[string]string{
+				"ARGUS_AUTH_SESSION_LIFETIME": "48h",
+			},
+			want: &Settings{
+				SettingsBase: SettingsBase{
+					Auth: AuthSettings{
+						Session: AuthSessionSettings{
+							Lifetime: "48h",
+						},
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			name: "log.level",
+			env: map[string]string{
+				"ARGUS_LOG_LEVEL": "ERROR",
+			},
+			want: &Settings{
+				SettingsBase: SettingsBase{
+					Log: LogSettings{
+						Level: "ERROR",
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			name: "log.timestamps/valid",
+			env: map[string]string{
+				"ARGUS_LOG_TIMESTAMPS": "true",
+			},
+			want: &Settings{
+				SettingsBase: SettingsBase{
+					Log: LogSettings{
+						Timestamps: new(true),
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			name: "log.timestamps/invalid - not a bool",
+			env: map[string]string{
+				"ARGUS_LOG_TIMESTAMPS": "abc",
+			},
+			want: &Settings{},
+			ok:   false,
+			errRegex: test.TrimYAML(`
+				one or more.* environment variables.*
+					ARGUS_LOG_TIMESTAMPS: .*$`,
+			),
+		},
+		{
+			name: "web.listen-host",
+			env: map[string]string{
+				"ARGUS_WEB_LISTEN_HOST": "test",
+			},
+			want: &Settings{
+				SettingsBase: SettingsBase{
+					Web: WebSettings{
+						ListenHost: "test",
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			name: "web.listen-port",
+			env: map[string]string{
+				"ARGUS_WEB_LISTEN_PORT": "123",
+			},
+			want: &Settings{
+				SettingsBase: SettingsBase{
+					Web: WebSettings{
+						ListenPort: "123",
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			name: "web.cert-file",
+			env: map[string]string{
+				"ARGUS_WEB_CERT_FILE": "cert.test",
+			},
+			want: &Settings{
+				SettingsBase: SettingsBase{
+					Web: WebSettings{
+						CertFile: "cert.test",
+					},
+				},
+			},
+			ok: false,
+			errRegex: test.TrimYAML(`
+				^hard_defaults:
+					settings:
+						web:
+							cert_file: .*no such file.*$`,
+			),
+		},
+		{
+			name: "web.pkey-file",
+			env: map[string]string{
+				"ARGUS_WEB_PKEY_FILE": "pkey.test",
+			},
+			want: &Settings{
+				SettingsBase: SettingsBase{
+					Web: WebSettings{
+						KeyFile: "pkey.test",
+					},
+				},
+			},
+			ok: false,
+			errRegex: test.TrimYAML(`
+				^hard_defaults:
+					settings:
+						web:
+							pkey_file: .*no such file.*$`,
+			),
+		},
+		{
+			name: "web.route-prefix",
+			env: map[string]string{
+				"ARGUS_WEB_ROUTE_PREFIX": "prefix",
+			},
+			want: &Settings{
+				SettingsBase: SettingsBase{
+					Web: WebSettings{
+						RoutePrefix: "/prefix",
+					},
+				},
+			},
+			ok: true,
+		},
+		{
+			name: "web.basic_auth",
+			env: map[string]string{
+				"ARGUS_WEB_BASIC_AUTH_USERNAME": "user",
+				"ARGUS_WEB_BASIC_AUTH_PASSWORD": "pass",
+			},
+			want: &Settings{
+				SettingsBase: SettingsBase{
+					Web: WebSettings{
+						BasicAuth: &WebSettingsBasicAuth{
+							Username: "user",
+							Password: util.FmtHash(util.GetHash("pass")),
+						},
+					},
+				},
+			},
+			ok: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// t.Parallel() - Cannot run in parallel since we're using stdout.
+			releaseStdout := test.CaptureLog(t, logx.Default())
+
+			test.SetEnv(t, tc.env)
+			settings := Settings{}
+
+			errChannel := make(chan error, 1)
+			resultChannel := make(chan bool, 1)
+			// WHEN: MapEnvToStruct is called on it.
+			go func() {
+				err := settings.MapEnvToStruct()
+				errChannel <- err
+				resultChannel <- err == nil
+			}()
+
+			prefix := fmt.Sprintf(
+				"%s\nSettings.MapEnvToStruct(%+v)",
+				packageName, tc.env,
+			)
+
+			// THEN: the ok value is as expected.
+			if err := test.AssertChannelBool(
+				t,
+				tc.ok,
+				resultChannel,
+				logx.ExitCodeChannel(),
+				releaseStdout,
+			); err != nil {
+				t.Fatal(prefix + err.Error())
+			}
+
+			// AND: any stdout error is as expected.
+			stdout := releaseStdout()
+			if !util.RegexCheck(tc.stdoutRegex, stdout) {
+				t.Errorf(
+					"%s stdout mismatch\ngot:  %q\nwant: %q",
+					prefix, stdout, tc.stdoutRegex,
+				)
+			}
+
+			// AND: any returned error is as expected.
+			tc.errRegex = util.ValueOr(tc.errRegex, `^$`)
+			select {
+			case err := <-errChannel:
+				e := errfmt.FormatError(err)
+				if !util.RegexCheck(tc.errRegex, e) {
+					t.Errorf(
+						"%s error mismatch\ngot:  %q\nwant: %q",
+						prefix, e, tc.errRegex,
+					)
+				}
+			default:
+				t.Fatalf("%s error expected but not returned", prefix)
+			}
+
+			// AND: the settings are set to the appropriate env vars.
+			gotStr := settings.String("")
+			wantStr := tc.want.String("")
+			if gotStr != wantStr {
+				t.Errorf(
+					"%s stringified mismatch\ngot:  %v\nwant: %v",
+					prefix, gotStr, wantStr,
+				)
+			}
+		})
+	}
+}
+
 func TestDataSettings_IsZero(t *testing.T) {
 	// GIVEN: a DataSettings struct.
 	tests := []struct {
@@ -1193,257 +1476,6 @@ func TestSettings_CheckValues(t *testing.T) {
 						prefix, got, wantPasswordHash,
 					)
 				}
-			}
-		})
-	}
-}
-
-func TestSettings_MapEnvToStruct(t *testing.T) {
-	// Unset ARGUS_LOG_LEVEL.
-	argusLogLevelEnvKey := "ARGUS_LOG_LEVEL"
-	argusLogLevel := os.Getenv(argusLogLevelEnvKey)
-	os.Setenv(argusLogLevelEnvKey, "")
-	t.Cleanup(func() {
-		os.Setenv(argusLogLevelEnvKey, argusLogLevel)
-	})
-
-	// GIVEN: vars set for Settings vars.
-	tests := []struct {
-		name                  string
-		env                   map[string]string
-		want                  *Settings
-		stdoutRegex, errRegex string
-		ok                    bool
-	}{
-		{
-			name: "empty vars ignored",
-			env: map[string]string{
-				"ARGUS_LOG_LEVEL": "",
-			},
-			want: &Settings{},
-			ok:   true,
-		},
-		{
-			name: "data.readonly",
-			env: map[string]string{
-				"ARGUS_DATA_READONLY": "true",
-			},
-			want: &Settings{
-				SettingsBase: SettingsBase{
-					Data: DataSettings{
-						Readonly: test.Ptr(true),
-					},
-				},
-			},
-			ok: true,
-		},
-		{
-			name: "log.level",
-			env: map[string]string{
-				"ARGUS_LOG_LEVEL": "ERROR",
-			},
-			want: &Settings{
-				SettingsBase: SettingsBase{
-					Log: LogSettings{
-						Level: "ERROR",
-					},
-				},
-			},
-			ok: true,
-		},
-		{
-			name: "log.timestamps/valid",
-			env: map[string]string{
-				"ARGUS_LOG_TIMESTAMPS": "true",
-			},
-			want: &Settings{
-				SettingsBase: SettingsBase{
-					Log: LogSettings{
-						Timestamps: test.Ptr(true),
-					},
-				},
-			},
-			ok: true,
-		},
-		{
-			name: "log.timestamps/invalid - not a bool",
-			env: map[string]string{
-				"ARGUS_LOG_TIMESTAMPS": "abc",
-			},
-			want: &Settings{},
-			ok:   false,
-			errRegex: test.TrimYAML(`
-				one or more.* environment variables.*
-					ARGUS_LOG_TIMESTAMPS: .*$`,
-			),
-		},
-		{
-			name: "web.listen-host",
-			env: map[string]string{
-				"ARGUS_WEB_LISTEN_HOST": "test",
-			},
-			want: &Settings{
-				SettingsBase: SettingsBase{
-					Web: WebSettings{
-						ListenHost: "test",
-					},
-				},
-			},
-			ok: true,
-		},
-		{
-			name: "web.listen-port",
-			env: map[string]string{
-				"ARGUS_WEB_LISTEN_PORT": "123",
-			},
-			want: &Settings{
-				SettingsBase: SettingsBase{
-					Web: WebSettings{
-						ListenPort: "123",
-					},
-				},
-			},
-			ok: true,
-		},
-		{
-			name: "web.cert-file",
-			env: map[string]string{
-				"ARGUS_WEB_CERT_FILE": "cert.test",
-			},
-			want: &Settings{
-				SettingsBase: SettingsBase{
-					Web: WebSettings{
-						CertFile: "cert.test",
-					},
-				},
-			},
-			ok: false,
-			errRegex: test.TrimYAML(`
-				^hard_defaults:
-					settings:
-						web:
-							cert_file: .*no such file.*$`,
-			),
-		},
-		{
-			name: "web.pkey-file",
-			env: map[string]string{
-				"ARGUS_WEB_PKEY_FILE": "pkey.test",
-			},
-			want: &Settings{
-				SettingsBase: SettingsBase{
-					Web: WebSettings{
-						KeyFile: "pkey.test",
-					},
-				},
-			},
-			ok: false,
-			errRegex: test.TrimYAML(`
-				^hard_defaults:
-					settings:
-						web:
-							pkey_file: .*no such file.*$`,
-			),
-		},
-		{
-			name: "web.route-prefix",
-			env: map[string]string{
-				"ARGUS_WEB_ROUTE_PREFIX": "prefix",
-			},
-			want: &Settings{
-				SettingsBase: SettingsBase{
-					Web: WebSettings{
-						RoutePrefix: "/prefix",
-					},
-				},
-			},
-			ok: true,
-		},
-		{
-			name: "web.basic_auth",
-			env: map[string]string{
-				"ARGUS_WEB_BASIC_AUTH_USERNAME": "user",
-				"ARGUS_WEB_BASIC_AUTH_PASSWORD": "pass",
-			},
-			want: &Settings{
-				SettingsBase: SettingsBase{
-					Web: WebSettings{
-						BasicAuth: &WebSettingsBasicAuth{
-							Username: "user",
-							Password: util.FmtHash(util.GetHash("pass")),
-						},
-					},
-				},
-			},
-			ok: true,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			// t.Parallel() - Cannot run in parallel since we're using stdout.
-			releaseStdout := test.CaptureLog(t, logx.Default())
-
-			test.SetEnv(t, tc.env)
-			settings := Settings{}
-
-			errChannel := make(chan error, 1)
-			resultChannel := make(chan bool, 1)
-			// WHEN: MapEnvToStruct is called on it.
-			go func() {
-				err := settings.MapEnvToStruct()
-				errChannel <- err
-				resultChannel <- err == nil
-			}()
-
-			prefix := fmt.Sprintf(
-				"%s\nSettings.MapEnvToStruct(%+v)",
-				packageName, tc.env,
-			)
-
-			// THEN: the ok value is as expected.
-			if err := test.AssertChannelBool(
-				t,
-				tc.ok,
-				resultChannel,
-				logx.ExitCodeChannel(),
-				releaseStdout,
-			); err != nil {
-				t.Fatal(prefix + err.Error())
-			}
-
-			// AND: any stdout error is as expected.
-			stdout := releaseStdout()
-			if !util.RegexCheck(tc.stdoutRegex, stdout) {
-				t.Errorf(
-					"%s stdout mismatch\ngot:  %q\nwant: %q",
-					prefix, stdout, tc.stdoutRegex,
-				)
-			}
-
-			// AND: any returned error is as expected.
-			tc.errRegex = util.ValueOr(tc.errRegex, `^$`)
-			select {
-			case err := <-errChannel:
-				e := errfmt.FormatError(err)
-				if !util.RegexCheck(tc.errRegex, e) {
-					t.Errorf(
-						"%s error mismatch\ngot:  %q\nwant: %q",
-						prefix, e, tc.errRegex,
-					)
-				}
-			default:
-				t.Fatalf("%s error expected but not returned", prefix)
-			}
-
-			// AND: the settings are set to the appropriate env vars.
-			gotStr := settings.String("")
-			wantStr := tc.want.String("")
-			if gotStr != wantStr {
-				t.Errorf(
-					"%s stringified mismatch\ngot:  %v\nwant: %v",
-					prefix, gotStr, wantStr,
-				)
 			}
 		})
 	}
