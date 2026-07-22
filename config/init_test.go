@@ -213,7 +213,10 @@ func TestConfig_Load(t *testing.T) {
 			var exitCode *int
 			select {
 			case msg := <-exitCodeChannel:
-				t.Logf("%s\n%s", packageName, msg)
+				t.Logf(
+					"%s\n%s",
+					packageName, msg,
+				)
 				exitCode = test.Ptr(1)
 			default:
 			}

@@ -2247,7 +2247,7 @@ func TestHTTP_ServiceEdit__edit__missingID(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPut, "/api/v1/service/config", payload)
 	req.URL.RawQuery = params.Encode()
 	w := httptest.NewRecorder()
-	api.httpServiceEdit(w, req)
+	api.httpServiceEdit(w, req, actionEdit)
 	res := w.Result()
 	t.Cleanup(func() { _ = res.Body.Close() })
 
@@ -3351,7 +3351,10 @@ func TestHTTP_NotifyTest(t *testing.T) {
 			// AND: the expected message is contained in the bodyRegex.
 			data, err := io.ReadAll(res.Body)
 			if err != nil {
-				t.Fatalf("%s unexpected error:\n%v", packageName, err)
+				t.Fatalf(
+					"%s unexpected error:\n%v",
+					packageName, err,
+				)
 			}
 			// Marshal message out of JSON data {"message": text}.
 			var body map[string]string
@@ -3379,31 +3382,36 @@ func TestHTTP_ServiceOpLock__conflict(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "config.yml")
 	api := testAPI(t, file)
 
-	tests := map[string]struct {
+	tests := []struct {
+		name       string
 		handler    func(http.ResponseWriter, *http.Request)
 		hold       hold
 		statusCode int
 		bodyRegex  string
 	}{
-		"latest-version refresh rejected while an exclusive op is in flight": {
+		{
+			name:       "latest-version refresh rejected while an exclusive op is in flight",
 			handler:    api.httpLatestVersionRefresh,
 			hold:       holdWrite,
 			statusCode: http.StatusConflict,
 			bodyRegex:  `another operation is in progress`,
 		},
-		"latest-version refresh allowed alongside another refresh (shared)": {
+		{
+			name:       "latest-version refresh allowed alongside another refresh (shared)",
 			handler:    api.httpLatestVersionRefresh,
 			hold:       holdRead,
 			statusCode: http.StatusNotFound, // Past the lock, then the absent service.
 			bodyRegex:  `not found`,
 		},
-		"deployed-version refresh rejected while an exclusive op is in flight": {
+		{
+			name:       "deployed-version refresh rejected while an exclusive op is in flight",
 			handler:    api.httpDeployedVersionRefresh,
 			hold:       holdWrite,
 			statusCode: http.StatusConflict,
 			bodyRegex:  `another operation is in progress`,
 		},
-		"deployed-version refresh allowed alongside another refresh (shared)": {
+		{
+			name:       "deployed-version refresh allowed alongside another refresh (shared)",
 			handler:    api.httpDeployedVersionRefresh,
 			hold:       holdRead,
 			statusCode: http.StatusNotFound,
@@ -3411,11 +3419,11 @@ func TestHTTP_ServiceOpLock__conflict(t *testing.T) {
 		},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			serviceID := name
+			serviceID := tc.name
 
 			// GIVEN: the service's op lock is held as described.
 			held := api.acquireServiceOp(serviceID)
