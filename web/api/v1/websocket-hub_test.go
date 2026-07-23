@@ -26,6 +26,61 @@ import (
 	"github.com/release-argus/Argus/internal/test"
 )
 
+func TestNewHub(t *testing.T) {
+	// GIVEN: we want a WebSocket Hub.
+
+	// WHEN: we create a new one with NewHub.
+	hub := NewHub()
+
+	prefix := fmt.Sprintf("%s\nNewHub()", packageName)
+
+	// THEN: it returns a Hub with all the channels and maps initialised.
+	fieldTests := []test.FieldAssertion{
+		{Name: "Broadcast", Got: hub.Broadcast, Want: nil, Mode: test.CompareNotEqual},
+		{Name: "register", Got: hub.register, Want: nil, Mode: test.CompareNotEqual},
+		{Name: "unregister", Got: hub.unregister, Want: nil, Mode: test.CompareNotEqual},
+		{Name: "query", Got: hub.query, Want: nil, Mode: test.CompareNotEqual},
+		{Name: "clients", Got: hub.clients, Want: nil, Mode: test.CompareNotEqual},
+	}
+	if testErr := test.AssertFields(t, fieldTests, prefix, ""); testErr != nil {
+		t.Fatal(testErr)
+	}
+}
+
+// hubQuery runs fn against the clients map on the Run goroutine, so a live hub can
+// be read race-free. Requires Run() to be active.
+func hubQuery[T any](h *Hub, fn func(map[*Client]bool) T) T {
+	done := make(chan T, 1)
+	h.query <- func(clients map[*Client]bool) {
+		done <- fn(clients)
+	}
+	return <-done
+}
+
+// hasClient reports whether client is registered (via the Run loop, so safe on a live hub).
+func (h *Hub) hasClient(client *Client) bool {
+	return hubQuery(
+		h,
+		func(clients map[*Client]bool) bool {
+			return clients[client]
+		},
+	)
+}
+
+// clientList snapshots the registered clients (via the Run loop, so safe on a live hub).
+func (h *Hub) clientList() []*Client {
+	return hubQuery(
+		h,
+		func(clients map[*Client]bool) []*Client {
+			list := make([]*Client, 0, len(clients))
+			for client := range clients {
+				list = append(list, client)
+			}
+			return list
+		},
+	)
+}
+
 func TestAnnounceMSG_ServiceID(t *testing.T) {
 	// GIVEN: announce messages of every shape.
 	tests := []struct {
@@ -91,61 +146,6 @@ func TestAnnounceMSG_ServiceID(t *testing.T) {
 				)
 			}
 		})
-	}
-}
-
-// hubQuery runs fn against the clients map on the Run goroutine, so a live hub can
-// be read race-free. Requires Run() to be active.
-func hubQuery[T any](h *Hub, fn func(map[*Client]bool) T) T {
-	done := make(chan T, 1)
-	h.query <- func(clients map[*Client]bool) {
-		done <- fn(clients)
-	}
-	return <-done
-}
-
-// hasClient reports whether client is registered (via the Run loop, so safe on a live hub).
-func (h *Hub) hasClient(client *Client) bool {
-	return hubQuery(
-		h,
-		func(clients map[*Client]bool) bool {
-			return clients[client]
-		},
-	)
-}
-
-// clientList snapshots the registered clients (via the Run loop, so safe on a live hub).
-func (h *Hub) clientList() []*Client {
-	return hubQuery(
-		h,
-		func(clients map[*Client]bool) []*Client {
-			list := make([]*Client, 0, len(clients))
-			for client := range clients {
-				list = append(list, client)
-			}
-			return list
-		},
-	)
-}
-
-func TestNewHub(t *testing.T) {
-	// GIVEN: we want a WebSocket Hub.
-
-	// WHEN: we create a new one with NewHub.
-	hub := NewHub()
-
-	prefix := fmt.Sprintf("%s\nNewHub()", packageName)
-
-	// THEN: it returns a Hub with all the channels and maps initialised.
-	fieldTests := []test.FieldAssertion{
-		{Name: "Broadcast", Got: hub.Broadcast, Want: nil, Mode: test.CompareNotEqual},
-		{Name: "register", Got: hub.register, Want: nil, Mode: test.CompareNotEqual},
-		{Name: "unregister", Got: hub.unregister, Want: nil, Mode: test.CompareNotEqual},
-		{Name: "query", Got: hub.query, Want: nil, Mode: test.CompareNotEqual},
-		{Name: "clients", Got: hub.clients, Want: nil, Mode: test.CompareNotEqual},
-	}
-	if testErr := test.AssertFields(t, fieldTests, prefix, ""); testErr != nil {
-		t.Fatal(testErr)
 	}
 }
 
