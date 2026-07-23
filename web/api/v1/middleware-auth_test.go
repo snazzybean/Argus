@@ -31,7 +31,6 @@ import (
 	"github.com/release-argus/Argus/auth/rbac"
 	"github.com/release-argus/Argus/auth/session"
 	"github.com/release-argus/Argus/auth/store"
-	"github.com/release-argus/Argus/internal/test"
 	"github.com/release-argus/Argus/service"
 	"github.com/release-argus/Argus/service/dashboard"
 	"github.com/release-argus/Argus/util"
@@ -665,7 +664,7 @@ func TestAPI_ContextForUser(t *testing.T) {
 		t.Context(),
 		sleeper.ID,
 		store.UserPatch{
-			Enabled: test.Ptr(false),
+			Enabled: new(false),
 		},
 	); err != nil {
 		t.Fatalf(

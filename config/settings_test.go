@@ -124,7 +124,7 @@ func TestSettings_MapEnvToStruct(t *testing.T) {
 			want: &Settings{
 				SettingsBase: SettingsBase{
 					Log: LogSettings{
-						Timestamps: test.Ptr(true),
+						Timestamps: new(true),
 					},
 				},
 			},
@@ -336,7 +336,7 @@ func TestDataSettings_IsZero(t *testing.T) {
 		{
 			name: "non-empty/Readonly",
 			data: DataSettings{
-				Readonly: test.Ptr(true),
+				Readonly: new(true),
 			},
 			want: false,
 		},
@@ -375,7 +375,7 @@ func TestLogSettings_IsZero(t *testing.T) {
 		{
 			name: "non-empty/Timestamps",
 			data: LogSettings{
-				Timestamps: test.Ptr(true),
+				Timestamps: new(true),
 			},
 			want: false,
 		},
@@ -389,7 +389,7 @@ func TestLogSettings_IsZero(t *testing.T) {
 		{
 			name: "non-empty/all",
 			data: LogSettings{
-				Timestamps: test.Ptr(true),
+				Timestamps: new(true),
 				Level:      "INFO",
 			},
 			want: false,
@@ -1081,7 +1081,7 @@ func TestSettings_IsZero(t *testing.T) {
 			data: Settings{
 				SettingsBase: SettingsBase{
 					Log: LogSettings{
-						Timestamps: test.Ptr(true),
+						Timestamps: new(true),
 					},
 				},
 			},
@@ -1114,7 +1114,7 @@ func TestSettings_IsZero(t *testing.T) {
 			data: Settings{
 				SettingsBase: SettingsBase{
 					Log: LogSettings{
-						Timestamps: test.Ptr(true),
+						Timestamps: new(true),
 					},
 					Data: DataSettings{
 						DatabaseFile: "db.sqlite",
@@ -1211,14 +1211,14 @@ func TestSettings_NilUndefinedFlags(t *testing.T) {
 		{
 			name:      "flag set",
 			flagSet:   true,
-			setStrTo:  test.Ptr("test"),
-			setBoolTo: test.Ptr(true),
+			setStrTo:  new("test"),
+			setBoolTo: new(true),
 		},
 		{
 			name:      "flag not set",
 			flagSet:   false,
-			setStrTo:  test.Ptr("foo"),
-			setBoolTo: test.Ptr(false),
+			setStrTo:  new("foo"),
+			setBoolTo: new(false),
 		},
 	}
 	flagStr := "log.level"
@@ -1362,7 +1362,7 @@ func TestSettings_Default__BasicAuthFromFlags(t *testing.T) {
 		},
 		{
 			name:         "only username flag provided",
-			usernameFlag: test.Ptr("test-user"),
+			usernameFlag: new("test-user"),
 			passwordFlag: nil,
 			want: &WebSettingsBasicAuth{
 				Username: "test-user",
@@ -1372,15 +1372,15 @@ func TestSettings_Default__BasicAuthFromFlags(t *testing.T) {
 		{
 			name:         "only password flag provided",
 			usernameFlag: nil,
-			passwordFlag: test.Ptr("test-pass"),
+			passwordFlag: new("test-pass"),
 			want: &WebSettingsBasicAuth{
 				Password: util.FmtHash(util.GetHash("test-pass")),
 			},
 		},
 		{
 			name:         "both flags provided",
-			usernameFlag: test.Ptr("test-user"),
-			passwordFlag: test.Ptr("test-pass"),
+			usernameFlag: new("test-user"),
+			passwordFlag: new("test-pass"),
 			want: &WebSettingsBasicAuth{
 				Username: "test-user",
 				Password: util.FmtHash(util.GetHash("test-pass")),
@@ -1816,7 +1816,7 @@ func TestSettings_GetStrings(t *testing.T) {
 			name:    "log.level flag",
 			getFunc: settings.LogLevel,
 			flag:    &LogLevel,
-			flagVal: test.Ptr("ERROR"),
+			flagVal: new("ERROR"),
 			want:    "ERROR",
 		},
 		{
@@ -1837,7 +1837,7 @@ func TestSettings_GetStrings(t *testing.T) {
 			name:    "data.database-file flag",
 			getFunc: settings.DataDatabaseFile,
 			flag:    &DataDatabaseFile,
-			flagVal: test.Ptr("ERROR"),
+			flagVal: new("ERROR"),
 			want:    "ERROR",
 		},
 		{
@@ -1857,7 +1857,7 @@ func TestSettings_GetStrings(t *testing.T) {
 			name:    "web.listen-host flag",
 			getFunc: settings.WebListenHost,
 			flag:    &WebListenHost,
-			flagVal: test.Ptr("127.0.0.1"),
+			flagVal: new("127.0.0.1"),
 			want:    "127.0.0.1",
 		},
 		{
@@ -1878,7 +1878,7 @@ func TestSettings_GetStrings(t *testing.T) {
 			name:    "web.listen-port flag",
 			getFunc: settings.WebListenPort,
 			flag:    &WebListenPort,
-			flagVal: test.Ptr("54321"),
+			flagVal: new("54321"),
 			want:    "54321",
 		},
 		{
@@ -1899,7 +1899,7 @@ func TestSettings_GetStrings(t *testing.T) {
 			name:    "web.cert-file flag",
 			getFunc: settings.WebCertFile,
 			flag:    &WebCertFile,
-			flagVal: test.Ptr("settings_test.go"),
+			flagVal: new("settings_test.go"),
 			want:    "settings_test.go",
 		},
 		{
@@ -1920,7 +1920,7 @@ func TestSettings_GetStrings(t *testing.T) {
 			name:    "web.pkey-file flag",
 			getFunc: settings.WebKeyFile,
 			flag:    &WebPKeyFile,
-			flagVal: test.Ptr("settings_test.go"),
+			flagVal: new("settings_test.go"),
 			want:    "settings_test.go",
 		},
 		{
@@ -1941,7 +1941,7 @@ func TestSettings_GetStrings(t *testing.T) {
 			name:    "web.route-prefix flag",
 			getFunc: settings.WebRoutePrefix,
 			flag:    &WebRoutePrefix,
-			flagVal: test.Ptr("/flag"),
+			flagVal: new("/flag"),
 			want:    "/flag",
 		},
 		{
@@ -2033,7 +2033,7 @@ func TestSettings_GetBool(t *testing.T) {
 			name:    "data.readonly flag",
 			getFunc: settings.DataReadonly,
 			flag:    &DataReadonly,
-			flagVal: test.Ptr(false),
+			flagVal: new(false),
 			want:    "false",
 		},
 		{
@@ -2054,7 +2054,7 @@ func TestSettings_GetBool(t *testing.T) {
 			name:       "log.timestamps flag",
 			getFuncPtr: settings.LogTimestamps,
 			flag:       &LogTimestamps,
-			flagVal:    test.Ptr(false),
+			flagVal:    new(false),
 			want:       "false",
 		},
 	}

@@ -247,8 +247,10 @@ func TestPermissionSet_Allowed(t *testing.T) {
 		{
 			name: "malformed grant (unknown scope type) fails closed",
 			grants: []Grant{
-				{Permission: Permission{Resource: ResourceService, Action: ActionRead},
-					Scope: Scope{Type: ScopeType("environment"), Ref: "prod"}},
+				{
+					Permission: Permission{Resource: ResourceService, Action: ActionRead},
+					Scope:      Scope{Type: ScopeType("environment"), Ref: "prod"},
+				},
 			},
 			resource: ResourceService, action: ActionRead,
 			target: &Target{ServiceID: "argus", Tags: []string{"prod"}},

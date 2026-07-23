@@ -28,20 +28,19 @@ import (
 	storetest "github.com/release-argus/Argus/auth/store/test"
 	"github.com/release-argus/Argus/config"
 	"github.com/release-argus/Argus/internal/logx"
-	"github.com/release-argus/Argus/internal/test"
 )
 
 // testAuthConfig returns a Config with auth enabled and hard defaults set.
 func testAuthConfig(enabled bool) *config.Config {
 	cfg := &config.Config{}
-	cfg.Settings.Auth.Enabled = test.Ptr(enabled)
+	cfg.Settings.Auth.Enabled = new(enabled)
 	cfg.Settings.HardDefaults.Auth = config.AuthSettings{
-		Enabled: test.Ptr(false),
+		Enabled: new(false),
 		Session: config.AuthSessionSettings{
 			Lifetime:    "720h",
 			IdleTimeout: "168h",
 		},
-		Local: config.AuthLocalSettings{Enabled: test.Ptr(true)},
+		Local: config.AuthLocalSettings{Enabled: new(true)},
 	}
 	return cfg
 }
@@ -145,11 +144,11 @@ func TestSetupAuth(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			saveAuthFlags(t)
-			config.AuthResetPassword = test.Ptr(tc.resetPassword)
+			config.AuthResetPassword = new(tc.resetPassword)
 
 			cfg := testAuthConfig(tc.enabled)
 			if tc.localDisabled {
-				cfg.Settings.Auth.Local.Enabled = test.Ptr(false)
+				cfg.Settings.Auth.Local.Enabled = new(false)
 			}
 
 			var (

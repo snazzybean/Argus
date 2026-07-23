@@ -481,8 +481,10 @@ func TestAPI_Auth_serviceScopeHooks(t *testing.T) {
 	api, deps, _ := testAuthServer(t, file)
 	adminCookie := loginCookie(t, api, "admin", "admin-password")
 	group, err := deps.Store.CreateGroup(t.Context(), "scoped", "", []rbac.Grant{
-		{Permission: rbac.Permission{Resource: rbac.ResourceService, Action: rbac.ActionRead},
-			Scope: rbac.Scope{Type: rbac.ScopeService, Ref: "test"}},
+		{
+			Permission: rbac.Permission{Resource: rbac.ResourceService, Action: rbac.ActionRead},
+			Scope:      rbac.Scope{Type: rbac.ScopeService, Ref: "test"},
+		},
 	})
 	if err != nil {
 		t.Fatalf(

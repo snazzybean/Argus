@@ -149,10 +149,10 @@ func TestService_HandleCommand(t *testing.T) {
 			deployedLatest:        true,
 			deployedBecomesLatest: false,
 			fails: []*bool{
-				test.Ptr(true),
+				new(true),
 			},
 			wantFails: []*bool{
-				test.Ptr(false),
+				new(false),
 			},
 		},
 		{
@@ -165,10 +165,10 @@ func TestService_HandleCommand(t *testing.T) {
 			deployedLatest:        true,
 			deployedBecomesLatest: false,
 			fails: []*bool{
-				test.Ptr(false),
+				new(false),
 			},
 			wantFails: []*bool{
-				test.Ptr(true),
+				new(true),
 			},
 		},
 		{
@@ -181,10 +181,10 @@ func TestService_HandleCommand(t *testing.T) {
 			deployedLatest:        true,
 			deployedBecomesLatest: false,
 			fails: []*bool{
-				test.Ptr(false),
+				new(false),
 			},
 			wantFails: []*bool{
-				test.Ptr(false),
+				new(false),
 			},
 			nextRunnable: time.Now().UTC().Add(time.Minute),
 		},
@@ -198,10 +198,10 @@ func TestService_HandleCommand(t *testing.T) {
 			deployedLatest:        true,
 			deployedBecomesLatest: false,
 			fails: []*bool{
-				test.Ptr(false),
+				new(false),
 			},
 			wantFails: []*bool{
-				test.Ptr(true),
+				new(true),
 			},
 			nextRunnable: time.Now().UTC().Add(-time.Second),
 		},
@@ -365,10 +365,10 @@ func TestService_HandleWebHook(t *testing.T) {
 			deployedLatest:        true,
 			deployedBecomesLatest: false,
 			fails: map[string]*bool{
-				"pass": test.Ptr(true),
+				"pass": new(true),
 			},
 			wantFails: map[string]*bool{
-				"pass": test.Ptr(false),
+				"pass": new(false),
 			},
 		},
 		{
@@ -381,10 +381,10 @@ func TestService_HandleWebHook(t *testing.T) {
 			deployedLatest:        true,
 			deployedBecomesLatest: false,
 			fails: map[string]*bool{
-				"fail": test.Ptr(false),
+				"fail": new(false),
 			},
 			wantFails: map[string]*bool{
-				"fail": test.Ptr(true),
+				"fail": new(true),
 			},
 		},
 		{
@@ -397,10 +397,10 @@ func TestService_HandleWebHook(t *testing.T) {
 			deployedLatest:        true,
 			deployedBecomesLatest: false,
 			fails: map[string]*bool{
-				"pass": test.Ptr(false),
+				"pass": new(false),
 			},
 			wantFails: map[string]*bool{
-				"pass": test.Ptr(false),
+				"pass": new(false),
 			},
 			nextRunnable: time.Now().UTC().Add(time.Minute),
 		},
@@ -414,10 +414,10 @@ func TestService_HandleWebHook(t *testing.T) {
 			deployedLatest:        true,
 			deployedBecomesLatest: false,
 			fails: map[string]*bool{
-				"pass": test.Ptr(true),
+				"pass": new(true),
 			},
 			wantFails: map[string]*bool{
-				"pass": test.Ptr(false),
+				"pass": new(false),
 			},
 			nextRunnable: time.Now().UTC().Add(-time.Second),
 		},
@@ -783,13 +783,13 @@ func TestService_HandleFailedActions(t *testing.T) {
 				nil, nil,
 			},
 			wantFailsCommand: []*bool{
-				test.Ptr(true), test.Ptr(true),
+				new(true), new(true),
 			},
 			startFailsWebHook: map[string]*bool{
 				"will_fail": nil,
 			},
 			wantFailsWebHook: map[string]*bool{
-				"will_fail": test.Ptr(true),
+				"will_fail": new(true),
 			},
 		},
 		{
@@ -806,22 +806,22 @@ func TestService_HandleFailedActions(t *testing.T) {
 				"pass": whtest.WebHook(t, false, false, false),
 			},
 			startFailsCommand: []*bool{
-				test.Ptr(true),
-				test.Ptr(false),
-				test.Ptr(true),
-				test.Ptr(true),
+				new(true),
+				new(false),
+				new(true),
+				new(true),
 			},
 			wantFailsCommand: []*bool{
-				test.Ptr(false),
-				test.Ptr(false),
-				test.Ptr(false),
-				test.Ptr(true),
+				new(false),
+				new(false),
+				new(false),
+				new(true),
 			},
 			startFailsWebHook: map[string]*bool{
-				"pass": test.Ptr(false),
+				"pass": new(false),
 			},
 			wantFailsWebHook: map[string]*bool{
-				"pass": test.Ptr(false),
+				"pass": new(false),
 			},
 		},
 		{
@@ -838,22 +838,22 @@ func TestService_HandleFailedActions(t *testing.T) {
 				"pass": whtest.WebHook(t, false, false, false),
 			},
 			startFailsCommand: []*bool{
-				test.Ptr(true),
-				test.Ptr(false),
-				test.Ptr(true),
-				test.Ptr(true),
+				new(true),
+				new(false),
+				new(true),
+				new(true),
 			},
 			wantFailsCommand: []*bool{
-				test.Ptr(false),
-				test.Ptr(false),
-				test.Ptr(true),
-				test.Ptr(true),
+				new(false),
+				new(false),
+				new(true),
+				new(true),
 			},
 			startFailsWebHook: map[string]*bool{
-				"pass": test.Ptr(false),
+				"pass": new(false),
 			},
 			wantFailsWebHook: map[string]*bool{
-				"pass": test.Ptr(false),
+				"pass": new(false),
 			},
 			commandNextRunnable: []time.Time{
 				time.Now().UTC(),
@@ -873,12 +873,12 @@ func TestService_HandleFailedActions(t *testing.T) {
 			webhooks: webhook.WebHooks{
 				"pass": whtest.WebHook(t, false, false, false),
 			},
-			startFailsCommand: []*bool{test.Ptr(true), test.Ptr(false)},
+			startFailsCommand: []*bool{new(true), new(false)},
 			wantFailsCommand: []*bool{
 				nil, nil,
 			},
 			startFailsWebHook: map[string]*bool{
-				"pass": test.Ptr(false),
+				"pass": new(false),
 			},
 			wantFailsWebHook: map[string]*bool{
 				"pass": nil,
@@ -897,20 +897,20 @@ func TestService_HandleFailedActions(t *testing.T) {
 				"would_fail": whtest.WebHook(t, true, false, false),
 			},
 			startFailsCommand: []*bool{
-				test.Ptr(false),
+				new(false),
 			},
 			wantFailsCommand: []*bool{
-				test.Ptr(false),
+				new(false),
 			},
 			startFailsWebHook: map[string]*bool{
-				"will_fail":  test.Ptr(true),
-				"will_pass":  test.Ptr(true),
-				"would_fail": test.Ptr(false),
+				"will_fail":  new(true),
+				"will_pass":  new(true),
+				"would_fail": new(false),
 			},
 			wantFailsWebHook: map[string]*bool{
-				"will_fail":  test.Ptr(true),
-				"will_pass":  test.Ptr(false),
-				"would_fail": test.Ptr(false),
+				"will_fail":  new(true),
+				"will_pass":  new(false),
+				"would_fail": new(false),
 			},
 		},
 		{
@@ -926,20 +926,20 @@ func TestService_HandleFailedActions(t *testing.T) {
 				"would_fail":   whtest.WebHook(t, true, false, false),
 			},
 			startFailsCommand: []*bool{
-				test.Ptr(false),
+				new(false),
 			},
 			wantFailsCommand: []*bool{
-				test.Ptr(false),
+				new(false),
 			},
 			startFailsWebHook: map[string]*bool{
-				"is_runnable":  test.Ptr(true),
-				"not_runnable": test.Ptr(true),
-				"would_fail":   test.Ptr(false),
+				"is_runnable":  new(true),
+				"not_runnable": new(true),
+				"would_fail":   new(false),
 			},
 			wantFailsWebHook: map[string]*bool{
-				"is_runnable":  test.Ptr(false),
-				"not_runnable": test.Ptr(true),
-				"would_fail":   test.Ptr(false),
+				"is_runnable":  new(false),
+				"not_runnable": new(true),
+				"would_fail":   new(false),
 			},
 			webhookNextRunnable: map[string]time.Time{
 				"is_runnable":  time.Now().UTC(),
@@ -959,15 +959,15 @@ func TestService_HandleFailedActions(t *testing.T) {
 				"would_fail": whtest.WebHook(t, true, false, false),
 			},
 			startFailsCommand: []*bool{
-				test.Ptr(false),
+				new(false),
 			},
 			wantFailsCommand: []*bool{
 				nil,
 			},
 			startFailsWebHook: map[string]*bool{
-				"will_pass0": test.Ptr(true),
-				"will_pass1": test.Ptr(true),
-				"would_fail": test.Ptr(false),
+				"will_pass0": new(true),
+				"will_pass1": new(true),
+				"would_fail": new(false),
 			},
 			wantFailsWebHook: map[string]*bool{
 				"will_pass0": nil,
@@ -1163,15 +1163,15 @@ func TestService_ShouldRetryAll(t *testing.T) {
 		{
 			name: "commands that have failed",
 			command: []*bool{
-				test.Ptr(true),
-				test.Ptr(true),
+				new(true),
+				new(true),
 			},
 			want: false,
 		},
 		{
 			name: "commands that have failed, haven't run",
 			command: []*bool{
-				test.Ptr(true),
+				new(true),
 				nil,
 			},
 			want: false,
@@ -1179,16 +1179,16 @@ func TestService_ShouldRetryAll(t *testing.T) {
 		{
 			name: "commands that haven't failed",
 			command: []*bool{
-				test.Ptr(false),
-				test.Ptr(false),
+				new(false),
+				new(false),
 			},
 			want: true,
 		},
 		{
 			name: "mix of all command fail states",
 			command: []*bool{
-				test.Ptr(true),
-				test.Ptr(false),
+				new(true),
+				new(false),
 				nil,
 			},
 			want: false,
@@ -1204,15 +1204,15 @@ func TestService_ShouldRetryAll(t *testing.T) {
 		{
 			name: "webhooks that have failed",
 			webhook: map[string]*bool{
-				"1": test.Ptr(true),
-				"2": test.Ptr(true),
+				"1": new(true),
+				"2": new(true),
 			},
 			want: false,
 		},
 		{
 			name: "webhook that has failed and webhook that hasn't run",
 			webhook: map[string]*bool{
-				"1": test.Ptr(true),
+				"1": new(true),
 				"2": nil,
 			},
 			want: false,
@@ -1220,16 +1220,16 @@ func TestService_ShouldRetryAll(t *testing.T) {
 		{
 			name: "webhooks that haven't failed",
 			webhook: map[string]*bool{
-				"1": test.Ptr(false),
-				"2": test.Ptr(false),
+				"1": new(false),
+				"2": new(false),
 			},
 			want: true,
 		},
 		{
 			name: "mix of all webhook fail states",
 			webhook: map[string]*bool{
-				"1": test.Ptr(true),
-				"2": test.Ptr(false),
+				"1": new(true),
+				"2": new(false),
 				"3": nil,
 			},
 			want: false,
@@ -1237,13 +1237,13 @@ func TestService_ShouldRetryAll(t *testing.T) {
 		{
 			name: "mix of all webhook and command fail states",
 			command: []*bool{
-				test.Ptr(true),
-				test.Ptr(false),
+				new(true),
+				new(false),
 				nil,
 			},
 			webhook: map[string]*bool{
-				"1": test.Ptr(true),
-				"2": test.Ptr(false),
+				"1": new(true),
+				"2": new(false),
 				"3": nil,
 			},
 			want: false,
@@ -1251,14 +1251,14 @@ func TestService_ShouldRetryAll(t *testing.T) {
 		{
 			name: "mix of all webhook and command no fails",
 			command: []*bool{
-				test.Ptr(false),
-				test.Ptr(false),
-				test.Ptr(false),
+				new(false),
+				new(false),
+				new(false),
 			},
 			webhook: map[string]*bool{
-				"1": test.Ptr(false),
-				"2": test.Ptr(false),
-				"3": test.Ptr(false),
+				"1": new(false),
+				"2": new(false),
+				"3": new(false),
 			},
 			want: true,
 		},
@@ -1351,8 +1351,8 @@ func TestService_UpdatedVersion(t *testing.T) {
 				{"false"},
 			},
 			commandFails: []*bool{
-				test.Ptr(false),
-				test.Ptr(false),
+				new(false),
+				new(false),
 			},
 		},
 		{
@@ -1364,7 +1364,7 @@ func TestService_UpdatedVersion(t *testing.T) {
 				{"false"},
 			},
 			commandFails: []*bool{
-				test.Ptr(false),
+				new(false),
 				nil,
 			},
 		},
@@ -1377,8 +1377,8 @@ func TestService_UpdatedVersion(t *testing.T) {
 				{"false"},
 			},
 			commandFails: []*bool{
-				test.Ptr(false),
-				test.Ptr(true),
+				new(false),
+				new(true),
 			},
 		},
 		{
@@ -1390,8 +1390,8 @@ func TestService_UpdatedVersion(t *testing.T) {
 				"1": {},
 			},
 			webhookFails: map[string]*bool{
-				"0": test.Ptr(false),
-				"1": test.Ptr(false),
+				"0": new(false),
+				"1": new(false),
 			},
 		},
 		{
@@ -1403,7 +1403,7 @@ func TestService_UpdatedVersion(t *testing.T) {
 				"1": {},
 			},
 			webhookFails: map[string]*bool{
-				"0": test.Ptr(false),
+				"0": new(false),
 				"1": nil,
 			},
 		},
@@ -1416,8 +1416,8 @@ func TestService_UpdatedVersion(t *testing.T) {
 				"1": {},
 			},
 			webhookFails: map[string]*bool{
-				"0": test.Ptr(false),
-				"1": test.Ptr(true),
+				"0": new(false),
+				"1": new(true),
 			},
 		},
 		{
@@ -1433,12 +1433,12 @@ func TestService_UpdatedVersion(t *testing.T) {
 				"1": {},
 			},
 			commandFails: []*bool{
-				test.Ptr(false),
-				test.Ptr(false),
+				new(false),
+				new(false),
 			},
 			webhookFails: map[string]*bool{
-				"0": test.Ptr(false),
-				"1": test.Ptr(false),
+				"0": new(false),
+				"1": new(false),
 			},
 		},
 		{
@@ -1456,12 +1456,12 @@ func TestService_UpdatedVersion(t *testing.T) {
 			},
 			deployedVersion: &dvmanual.Lookup{},
 			commandFails: []*bool{
-				test.Ptr(false),
-				test.Ptr(false),
+				new(false),
+				new(false),
 			},
 			webhookFails: map[string]*bool{
-				"0": test.Ptr(false),
-				"1": test.Ptr(false),
+				"0": new(false),
+				"1": new(false),
 			},
 		},
 		{

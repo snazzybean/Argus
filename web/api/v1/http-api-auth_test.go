@@ -33,7 +33,6 @@ import (
 	"github.com/release-argus/Argus/auth/session"
 	"github.com/release-argus/Argus/auth/store"
 	"github.com/release-argus/Argus/config/decode"
-	"github.com/release-argus/Argus/internal/test"
 	"github.com/release-argus/Argus/util"
 	apitype "github.com/release-argus/Argus/web/api/types"
 )
@@ -111,7 +110,7 @@ func TestAPI_AuthLogin(t *testing.T) {
 	api, deps, _ := testAuthServer(t, file)
 	disabledUser := createAuthUser(t, deps, "sleeper", "sleeper-password", store.GroupViewer)
 	if _, err := deps.Store.UpdateUser(t.Context(), disabledUser.ID,
-		store.UserPatch{Enabled: test.Ptr(false)}); err != nil {
+		store.UserPatch{Enabled: new(false)}); err != nil {
 		t.Fatalf(
 			"%s\ndisable user: %v",
 			packageName, err,

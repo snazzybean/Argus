@@ -166,7 +166,7 @@ func TestConfig_Load(t *testing.T) {
 					)
 				}
 			},
-			exitCode: test.Ptr(1),
+			exitCode: new(1),
 		},
 		{
 			name: "Config that is unreadable",
@@ -174,7 +174,7 @@ func TestConfig_Load(t *testing.T) {
 				testYAML_config_test(path)
 				_ = os.Chmod(path, 0_222)
 			},
-			exitCode: test.Ptr(1),
+			exitCode: new(1),
 		},
 	}
 
@@ -215,7 +215,7 @@ func TestConfig_Load(t *testing.T) {
 					"%s\n%s",
 					packageName, msg,
 				)
-				exitCode = test.Ptr(1)
+				exitCode = new(1)
 			default:
 			}
 			got := test.StringifyPtr(tc.exitCode)

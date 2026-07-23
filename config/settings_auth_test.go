@@ -21,7 +21,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/release-argus/Argus/internal/test"
 	"github.com/release-argus/Argus/util"
 	"github.com/release-argus/Argus/util/errfmt"
 )
@@ -30,13 +29,13 @@ import (
 func authHardDefaults() SettingsBase {
 	return SettingsBase{
 		Auth: AuthSettings{
-			Enabled: test.Ptr(false),
+			Enabled: new(false),
 			Session: AuthSessionSettings{
 				Lifetime:    "720h",
 				IdleTimeout: "168h",
 			},
 			Local: AuthLocalSettings{
-				Enabled: test.Ptr(true),
+				Enabled: new(true),
 			},
 		},
 	}
@@ -56,7 +55,7 @@ func TestAuthSettings_IsZero(t *testing.T) {
 		},
 		{
 			name: "enabled set",
-			auth: AuthSettings{Enabled: test.Ptr(true)},
+			auth: AuthSettings{Enabled: new(true)},
 		},
 		{
 			name: "session lifetime set",
@@ -68,7 +67,7 @@ func TestAuthSettings_IsZero(t *testing.T) {
 		},
 		{
 			name: "local enabled set",
-			auth: AuthSettings{Local: AuthLocalSettings{Enabled: test.Ptr(false)}},
+			auth: AuthSettings{Local: AuthLocalSettings{Enabled: new(false)}},
 		},
 	}
 
@@ -256,14 +255,14 @@ func TestSettings_CheckValues_Auth(t *testing.T) {
 		{
 			name: "auth enabled alone is fine",
 			auth: AuthSettings{
-				Enabled: test.Ptr(true),
+				Enabled: new(true),
 			},
 			errRegex: `^$`,
 		},
 		{
 			name: "auth enabled with YAML basic auth conflicts",
 			auth: AuthSettings{
-				Enabled: test.Ptr(true),
+				Enabled: new(true),
 			},
 			yamlBasic: &WebSettingsBasicAuth{
 				Username: "u",
@@ -274,7 +273,7 @@ func TestSettings_CheckValues_Auth(t *testing.T) {
 		{
 			name: "auth enabled with flag basic auth conflicts",
 			auth: AuthSettings{
-				Enabled: test.Ptr(true),
+				Enabled: new(true),
 			},
 			flagBasic: &WebSettingsBasicAuth{
 				Username: "u",
@@ -285,7 +284,7 @@ func TestSettings_CheckValues_Auth(t *testing.T) {
 		{
 			name: "auth enabled with env (hard-default layer) basic auth conflicts",
 			auth: AuthSettings{
-				Enabled: test.Ptr(true),
+				Enabled: new(true),
 			},
 			hardBasic: &WebSettingsBasicAuth{
 				Username: "u",
@@ -296,9 +295,9 @@ func TestSettings_CheckValues_Auth(t *testing.T) {
 		{
 			name: "auth enabled with every provider disabled errors",
 			auth: AuthSettings{
-				Enabled: test.Ptr(true),
+				Enabled: new(true),
 				Local: AuthLocalSettings{
-					Enabled: test.Ptr(false),
+					Enabled: new(false),
 				},
 			},
 			errRegex: "provider",
@@ -363,12 +362,12 @@ func TestSettings_AuthAccessors(t *testing.T) {
 		{
 			name: "explicit values",
 			auth: AuthSettings{
-				Enabled: test.Ptr(true),
+				Enabled: new(true),
 				Session: AuthSessionSettings{
 					Lifetime:    "48h",
 					IdleTimeout: "2h30m",
 				},
-				Local: AuthLocalSettings{Enabled: test.Ptr(false)},
+				Local: AuthLocalSettings{Enabled: new(false)},
 			},
 			wantEnabled:     true,
 			wantLocal:       false,

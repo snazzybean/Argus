@@ -284,7 +284,7 @@ func TestGetIP(t *testing.T) {
 	}{
 		{
 			name:       "middleware-resolved IP",
-			contextIP:  test.Ptr("1.1.1.1"),
+			contextIP:  new("1.1.1.1"),
 			remoteAddr: "4.4.4.4:123",
 			want:       "1.1.1.1",
 		},
