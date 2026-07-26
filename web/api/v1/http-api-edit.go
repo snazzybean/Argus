@@ -686,8 +686,11 @@ func (api *API) httpServiceEdit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// CREATE/EDIT: service with this ID/Name already exists.
-	if (reqType == actionCreate && api.Config.Service[newService.ID] != nil) ||
-		api.Config.ServiceWithNameExists(newService.Name, serviceID) {
+	api.Config.OrderMu.RLock()
+	nameTaken := (reqType == actionCreate && api.Config.Service[newService.ID] != nil) ||
+		api.Config.ServiceWithNameExists(newService.Name, serviceID)
+	api.Config.OrderMu.RUnlock()
+	if nameTaken {
 		failRequest(
 			&w,
 			fmt.Errorf("create %q failed, service with this name already exists", newService.ID),
